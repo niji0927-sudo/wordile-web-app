@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가자 오목의 세계로!</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        /* Font Awesome is no longer needed as chat icons are removed */
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #e0f2f7 0%, #cce7f0 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: auto;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.25), 0 8px 15px -5px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 95%;
+            width: 100%;
+            position: relative;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .view-section {
+            display: flex; /* Always display as it's the only view */
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* .view-section.active is no longer needed */
+
+        /* Common button styles */
+        .primary-button, .secondary-button {
+            padding: 0.85rem 1.75rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 6px 12px -3px rgba(0, 0, 0, 0.2), 0 3px 6px -2px rgba(0, 0, 0, 0.1);
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .primary-button:hover {
+            background: linear-gradient(145deg, #4a7bb2, #3a6290);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3), 0 4px 8px -3px rgba(0, 0, 0, 0.15);
+        }
+        .primary-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .secondary-button {
+            background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+        .secondary-button:hover {
+            background: linear-gradient(145deg, #7f8c8d, #6c757d);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3), 0 4px 8px -3px rgba(0, 0, 0, 0.15);
+        }
+        .secondary-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Game specific styles */
+        .game-area {
+            display: flex;
+            flex-direction: column; /* Only game board, no chat beside it */
+            gap: 2rem;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            background: linear-gradient(145deg, #f7d794, #e8c47e);
+            border: 3px solid #6b4e2e;
+            border-radius: 0.75rem;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+            touch-action: manipulation;
+        }
+        .status-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            background-color: #ecf0f1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .game-button-group {
+            display: flex;
+            gap: 1.25rem;
+            margin-top: 2rem;
+            justify-content: center;
+        }
+        .game-button {
+            background: linear-gradient(145deg, #5a9bd4, #4a7bb2);
+            color: white;
+            padding: 0.85rem 1.75rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 6px 12px -3px rgba(0, 0, 0, 0.2), 0 3px 6px -2px rgba(0, 0, 0, 0.1);
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .game-button:hover {
+            background: linear-gradient(145deg, #4a7bb2, #3a6290);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3), 0 4px 8px -3px rgba(0, 0, 0, 0.15);
+        }
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Chat styles - Removed */
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 900px) {
+            .game-area {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+                border-radius: 1rem;
+            }
+            .status-text {
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
+                padding: 0.6rem 1rem;
+            }
+            .game-button-group {
+                flex-direction: column;
+                gap: 0.75rem;
+                margin-top: 1rem;
+            }
+            .primary-button, .secondary-button, .game-button {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Game View (Main view for AI Battle) -->
+        <div id="gameView" class="view-section active">
+            <div id="status" class="status-text">흑돌 차례</div>
+            <div class="game-area">
+                <canvas id="omokCanvas"></canvas>
+                <!-- Chat container removed -->
+            </div>
+            <div class="game-button-group">
+                <button id="resetButton" class="game-button">AI 대전 다시 시작</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // UUID 생성 함수 (Local Storage를 위한 고유 ID)
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        let currentUserId = localStorage.getItem('omokUserId');
+        if (!currentUserId) {
+            currentUserId = generateUUID();
+            localStorage.setItem('omokUserId', currentUserId);
+        }
+
+        let myNickname = localStorage.getItem('omokNickname') || `익명_${currentUserId.substring(0, 4)}`;
+        let myWins = parseInt(localStorage.getItem('omokPlayerWins') || '0'); // Local storage for player wins
+        let aiWins = parseInt(localStorage.getItem('omokAIWins') || '0'); // Local storage for AI wins
+
+        // UI elements - Views (Only gameView is active now)
+        const gameView = document.getElementById('gameView');
+
+        // UI elements - Game
+        const canvas = document.getElementById('omokCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusDisplay = document.getElementById('status');
+        const resetButton = document.getElementById('resetButton');
+
+        // Chat related UI elements removed
+
+        // Game specific variables (board, player, etc.)
+        const BOARD_SIZE = 15;
+        let CELL_SIZE = 30;
+        let STONE_RADIUS = 12;
+        const STAR_POINT_RADIUS = 4;
+        let board = [];
+        let currentPlayer = 1; // 1: 흑돌 (플레이어), 2: 백돌 (AI)
+        let gameOver = false;
+        // aiMood variable is no longer directly used for chat, but can be kept for internal AI logic if desired.
+        // let aiMood = "neutral"; 
+
+        // --- Local Storage Functions ---
+
+        /**
+         * 사용자 프로필을 Local Storage에서 로드합니다.
+         */
+        function loadUserProfile() {
+            myNickname = localStorage.getItem('omokNickname') || `익명_${currentUserId.substring(0, 4)}`;
+            myWins = parseInt(localStorage.getItem('omokPlayerWins') || '0');
+            aiWins = parseInt(localStorage.getItem('omokAIWins') || '0');
+        }
+
+        /**
+         * 닉네임을 업데이트하고 Local Storage에 저장합니다.
+         */
+        function updateNickname() {
+            // 이 함수는 이제 UI 요소가 없으므로 직접 호출되지 않습니다.
+            console.warn("updateNickname: Profile section is not available in this view.");
+        }
+
+        /**
+         * 승리 횟수를 Local Storage에 저장합니다.
+         */
+        function saveWins() {
+            localStorage.setItem('omokPlayerWins', myWins);
+            localStorage.setItem('omokAIWins', aiWins);
+            // 승리 후 UI 업데이트는 상태 텍스트로만 표시됨
+        }
+
+        // --- UI Navigation ---
+        // 이제 단일 뷰이므로 showView 함수는 단순화됩니다.
+        function showGameView() {
+            initializeBoard();
+            resizeCanvas();
+            // Chat functions are removed, so no sendAIChat("game_start") here.
+        }
+
+        // --- Chat Functions - ALL REMOVED ---
+        // appendMessage, sendAIChat, sendUserChat functions are all removed.
+
+        // --- Game Logic (Core) ---
+
+        /**
+         * 게임 보드를 초기화합니다.
+         */
+        function initializeBoard() {
+            board = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
+            currentPlayer = 1;
+            gameOver = false;
+            // aiMood initialization removed
+            updateStatus();
+            drawBoard();
+            // chatMessagesDiv.innerHTML = ''; // Chat messages div removed
+        }
+
+        /**
+         * 게임 보드를 그립니다.
+         */
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#6b4e2e';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo((i + 0.5) * CELL_SIZE, 0.5 * CELL_SIZE);
+                ctx.lineTo((i + 0.5) * CELL_SIZE, (BOARD_SIZE - 0.5) * CELL_SIZE);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0.5 * CELL_SIZE, (i + 0.5) * CELL_SIZE);
+                ctx.lineTo((BOARD_SIZE - 0.5) * CELL_SIZE, (i + 0.5) * CELL_SIZE);
+                ctx.stroke();
+            }
+
+            const starPoints = [
+                [3, 3], [3, 11], [11, 3], [11, 11],
+                [7, 7]
+            ];
+            ctx.fillStyle = '#6b4e2e';
+            starPoints.forEach(([row, col]) => {
+                const x = (col + 0.5) * CELL_SIZE;
+                const y = (row + 0.5) * CELL_SIZE;
+                ctx.beginPath();
+                ctx.arc(x, y, STAR_POINT_RADIUS, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if (board[row][col] !== 0) {
+                        drawStone(row, col, board[row][col]);
+                    }
+                }
+            }
+        }
+
+        /**
+         * 특정 위치에 돌을 그립니다.
+         */
+        function drawStone(row, col, player) {
+            const x = (col + 0.5) * CELL_SIZE;
+            const y = (row + 0.5) * CELL_SIZE;
+
+            ctx.beginPath();
+            ctx.arc(x, y, STONE_RADIUS, 0, Math.PI * 2);
+
+            const gradient = ctx.createRadialGradient(x + STONE_RADIUS * 0.3, y - STONE_RADIUS * 0.3, STONE_RADIUS * 0.1, x, y, STONE_RADIUS);
+            if (player === 1) { // 흑돌
+                gradient.addColorStop(0, '#333333');
+                gradient.addColorStop(1, '#000000');
+            } else { // 백돌
+                gradient.addColorStop(0, '#ffffff');
+                gradient.addColorStop(1, '#cccccc');
+            }
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 5;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        /**
+         * 게임 상태 메시지를 업데이트합니다.
+         */
+        function updateStatus() {
+            if (gameOver) {
+                statusDisplay.textContent = `${currentPlayer === 1 ? '흑돌' : '백돌'} 승리!`;
+            } else {
+                statusDisplay.textContent = `${currentPlayer === 1 ? '흑돌' : '백돌'} 차례`;
+            }
+        }
+
+        /**
+         * 클릭 이벤트 핸들러: 돌을 놓습니다. (플레이어 턴)
+         */
+        function handleClick(event) {
+            if (gameOver || currentPlayer !== 1) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const col = Math.floor(x / CELL_SIZE);
+            const row = Math.floor(y / CELL_SIZE);
+
+            if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && board[row][col] === 0) {
+                placeStoneAI(row, col, currentPlayer);
+            }
+        }
+
+        /**
+         * AI 대전에서 돌을 놓는 공통 함수
+         * @param {number} row - 행 인덱스
+         * @param {number} col - 열 인덱스
+         * @param {number} player - 플레이어 (1: 흑돌, 2: 백돌)
+         */
+        async function placeStoneAI(row, col, player) {
+            board[row][col] = player;
+            drawBoard();
+
+            if (checkWin(row, col)) {
+                gameOver = true;
+                updateStatus();
+                if (player === 1) {
+                    myWins++;
+                    // sendAIChat("game_lose"); // Chat function removed
+                } else {
+                    aiWins++;
+                    // sendAIChat("game_win"); // Chat function removed
+                }
+                saveWins(); // 승리 시 기록 저장
+            } else {
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                updateStatus();
+                if (!gameOver && currentPlayer === 2) {
+                    // sendAIChat("player_turn_end"); // Chat function removed
+                    setTimeout(aiMove, 500);
+                } else if (!gameOver && currentPlayer === 1) {
+                    // sendAIChat("ai_turn_end"); // Chat function removed
+                }
+            }
+        }
+
+        /**
+         * AI의 움직임을 결정하고 돌을 놓습니다.
+         */
+        function aiMove() {
+            if (gameOver || currentPlayer !== 2) return;
+
+            let bestMove = { row: -1, col: -1, score: -Infinity };
+
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if (board[row][col] === 0) {
+                        let currentScore = evaluateMove(row, col, 2);
+                        let opponentThreatScore = evaluateMove(row, col, 1);
+
+                        if (opponentThreatScore >= 1000000) {
+                            currentScore = Infinity;
+                        } else if (opponentThreatScore >= 100000) {
+                            currentScore = Math.max(currentScore, 500000);
+                        } else if (opponentThreatScore >= 10000) {
+                            currentScore = Math.max(currentScore, 50000);
+                        } else if (opponentThreatScore >= 1000) {
+                            currentScore = Math.max(currentScore, 5000);
+                        }
+
+                        if (currentScore > bestMove.score) {
+                            bestMove.score = currentScore;
+                            bestMove.row = row;
+                            bestMove.col = col;
+                        }
+                    }
+                }
+            }
+
+            if (bestMove.row === -1) {
+                const center = Math.floor(BOARD_SIZE / 2);
+                for (let r = -1; r <= 1; r++) {
+                    for (let c = -1; c <= 1; c++) {
+                        const targetRow = center + r;
+                        const targetCol = center + c;
+                        if (targetRow >= 0 && targetRow < BOARD_SIZE && targetCol >= 0 && targetCol < BOARD_SIZE && board[targetRow][targetCol] === 0) {
+                            bestMove.row = targetRow;
+                            bestMove.col = targetCol;
+                            break;
+                        }
+                    }
+                    if (bestMove.row !== -1) break;
+                }
+
+                if (bestMove.row === -1) {
+                    let emptyCells = [];
+                    for (let r = 0; r < BOARD_SIZE; r++) {
+                        for (let c = 0; c < BOARD_SIZE; c++) {
+                            if (board[r][c] === 0) {
+                                emptyCells.push({ row: r, col: c });
+                            }
+                        }
+                    }
+                    if (emptyCells.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                        bestMove = emptyCells[randomIndex];
+                    }
+                }
+            }
+
+            if (bestMove.row !== -1) {
+                placeStoneAI(bestMove.row, bestMove.col, currentPlayer);
+            }
+        }
+
+        /**
+         * 특정 위치에 돌을 놓았을 때의 점수를 평가합니다.
+         */
+        function evaluateMove(row, col, player) {
+            let score = 0;
+            board[row][col] = player;
+
+            const directions = [
+                [0, 1],
+                [1, 0],
+                [1, 1],
+                [1, -1]
+            ];
+
+            for (const [dr, dc] of directions) {
+                let currentLine = [];
+                for (let i = -4; i <= 4; i++) {
+                    const r = row + dr * i;
+                    const c = col + dc * i;
+                    if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+                        currentLine.push(board[r][c]);
+                    } else {
+                        currentLine.push(-1);
+                    }
+                }
+                score += evaluateLine(currentLine, player);
+            }
+
+            board[row][col] = 0;
+            return score;
+        }
+
+        /**
+         * 한 줄(line)의 돌들을 평가하여 점수를 반환합니다.
+         */
+        function evaluateLine(line, player) {
+            let maxScore = 0;
+            const opponent = player === 1 ? 2 : 1;
+
+            const isBlocked = (cellValue) => cellValue === opponent || cellValue === -1;
+
+            for (let j = 0; j <= line.length - 5; j++) {
+                const segment = line.slice(j, j + 5);
+                let pCount = 0;
+                let oCount = 0;
+                let emptyCount = 0;
+
+                segment.forEach(cell => {
+                    if (cell === player) pCount++;
+                    else if (cell === opponent) oCount++;
+                    else if (cell === 0) emptyCount++;
+                });
+
+                if (oCount > 0) continue;
+
+                const leftEndIndex = j - 1;
+                const rightEndIndex = j + 5;
+
+                const leftEnd = (leftEndIndex >= 0) ? line[leftEndIndex] : -1;
+                const rightEnd = (rightEndIndex < line.length) ? line[rightEndIndex] : -1;
+
+                const leftBlocked = isBlocked(leftEnd);
+                const rightBlocked = isBlocked(rightEnd);
+
+                if (pCount === 5) {
+                    maxScore = Math.max(maxScore, 1000000);
+                } else if (pCount === 4) {
+                    if (!leftBlocked && !rightBlocked && emptyCount >= 1) {
+                        maxScore = Math.max(maxScore, 100000);
+                    } else if ((!leftBlocked || !rightBlocked) && emptyCount >= 1) {
+                        maxScore = Math.max(maxScore, 10000);
+                    }
+                } else if (pCount === 3) {
+                    if (!leftBlocked && !rightBlocked && emptyCount >= 2) {
+                        maxScore = Math.max(maxScore, 10000);
+                    } else if ((!leftBlocked || !rightBlocked) && emptyCount >= 2) {
+                        maxScore = Math.max(maxScore, 1000);
+                    }
+                } else if (pCount === 2) {
+                    if (!leftBlocked && !rightBlocked && emptyCount >= 3) {
+                        maxScore = Math.max(maxScore, 1000);
+                    } else if ((!leftBlocked || !rightBlocked) && emptyCount >= 3) {
+                        maxScore = Math.max(maxScore, 100);
+                    }
+                }
+            }
+            return maxScore;
+        }
+
+        /**
+         * 승리 조건을 확인합니다.
+         */
+        function checkWin(row, col) {
+            const player = board[row][col];
+
+            const directions = [
+                [0, 1],
+                [1, 0],
+                [1, 1],
+                [1, -1]
+            ];
+
+            for (const [dr, dc] of directions) {
+                let count = 1;
+                for (let i = 1; i < 5; i++) {
+                    const r = row + dr * i;
+                    const c = col + dc * i;
+                    if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                for (let i = 1; i < 5; i++) {
+                    const r = row - dr * i;
+                    const c = col - dc * i;
+                    if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+
+                if (count >= 5) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // --- Event Listeners ---
+        // Game related
+        canvas.addEventListener('click', handleClick);
+        resetButton.addEventListener('click', initializeBoard); // AI 대전 다시 시작
+
+        // Chat related (removed sendChatButton event listener as chat input is gone)
+
+        // Page load initialization
+        window.onload = function() {
+            loadUserProfile(); // 사용자 프로필 로드
+            showGameView(); // 앱 시작 시 바로 AI 대전 화면으로 이동
+            initializeBoard(); // 보드 초기화
+            resizeCanvas();    // 캔버스 크기 조절
+        };
+
+        // Canvas resize (responsive)
+        function resizeCanvas() {
+            const containerWidth = canvas.parentElement.clientWidth;
+            // Subtract chat width if it's side by side, or full width if stacked
+            const availableWidth = window.innerWidth > 900 ? containerWidth - 300 - 32 : containerWidth; // 300px chat width + 32px gap/padding
+            const maxCanvasSize = Math.min(availableWidth - 40, 500);
+            const newCellSize = Math.floor(maxCanvasSize / BOARD_SIZE);
+            
+            CELL_SIZE = Math.max(1, newCellSize);
+            STONE_RADIUS = Math.floor(CELL_SIZE * 0.4);
+            
+            canvas.width = BOARD_SIZE * CELL_SIZE;
+            canvas.height = BOARD_SIZE * CELL_SIZE;
+            
+            // Only draw board if CELL_SIZE is valid and board is initialized
+            if (CELL_SIZE > 0 && board && board.length > 0) {
+                drawBoard();
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>
